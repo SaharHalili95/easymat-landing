@@ -2,485 +2,419 @@
 <html lang="he" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>EasyMat — מורה מתמטיקה AI לבגרות</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>EasyMat · מורה AI למתמטיקה לבגרות</title>
+  <meta name="description" content="מורה AI למתמטיקה לבגרות (3, 4 ו-5 יחידות): פתרון צעד-אחר-צעד עם נוסחאות, תרגול משאלות בגרות אמיתיות, וצילום שאלה בכתב יד. Next.js, Claude API, Pinecone." />
+  <meta name="theme-color" content="#1d3fa8" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="EasyMat · מורה AI למתמטיקה לבגרות" />
+  <meta property="og:description" content="פתרון צעד-אחר-צעד עם נוסחאות, תרגול משאלות בגרות אמיתיות, וצילום שאלה בכתב יד. בעברית ובאנגלית." />
+  <meta property="og:url" content="https://saharhalili95.github.io/easymat-landing/" />
+  <meta property="og:image" content="https://saharhalili95.github.io/easymat-landing/og.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.css" />
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --blue: #2563eb;
-      --blue-light: #3b82f6;
-      --blue-dark: #1d4ed8;
-      --bg: #f8fafc;
-      --white: #ffffff;
-      --gray-50: #f8fafc;
-      --gray-100: #f1f5f9;
-      --gray-200: #e2e8f0;
-      --gray-500: #64748b;
-      --gray-700: #334155;
-      --gray-900: #0f172a;
+      --paper: #fdfdfb;
+      --grid: #d9e4f5;
+      --grid-strong: #c3d3ee;
+      --margin: #e0565b;
+      --pen: #1d3fa8;
+      --pen-deep: #142c78;
+      --ink: #1b1f2a;
+      --ink-2: #4a5163;
+      --highlight: #ffe45c;
+      --rule: rgb(29 63 168 / 0.16);
+      --sheet: #ffffff;
+      --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+      --gutter: clamp(20px, 5vw, 48px);
     }
 
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
     body {
-      font-family: 'Heebo', sans-serif;
-      background: var(--bg);
-      color: var(--gray-900);
+      margin: 0;
+      font-family: "Rubik", system-ui, -apple-system, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background-color: var(--paper);
+      /* Squared notebook paper: the page is the student's maths notebook. */
+      background-image:
+        linear-gradient(var(--grid) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+      background-size: 24px 24px;
       line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+    ::selection { background: var(--highlight); color: var(--ink); }
+    :focus-visible { outline: 3px solid var(--pen); outline-offset: 3px; border-radius: 6px; }
+    a { color: inherit; }
+    h1, h2, h3, p, ul, ol { margin: 0; padding: 0; }
+    ul, ol { list-style: none; }
+
+    html[lang="he"] [lang="en"]:not(html), html[lang="en"] [lang="he"]:not(html) { display: none; }
+
+    /* The red margin line of an Israeli notebook sits on the right, where Hebrew starts. */
+    .page { position: relative; }
+    .page::before {
+      content: "";
+      position: absolute;
+      inset-block: 0;
+      inset-inline-start: clamp(14px, 4vw, 56px);
+      width: 2px;
+      background: var(--margin);
+      opacity: 0.55;
+      pointer-events: none;
     }
 
-    /* NAV */
-    nav {
-      background: var(--white);
-      border-bottom: 1px solid var(--gray-200);
-      padding: 0 2rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      height: 64px;
-      position: sticky;
-      top: 0;
-      z-index: 100;
+    .wrap { max-width: 1120px; margin: 0 auto; padding: 0 var(--gutter); position: relative; }
+    @media (max-width: 700px) {
+      .page::before { inset-inline-start: 10px; }
+      .wrap { padding-inline-start: 28px; }
     }
-    .nav-logo { font-size: 1.3rem; font-weight: 800; color: var(--blue); }
-    .nav-links { display: flex; gap: 1.5rem; }
-    .nav-links a { text-decoration: none; color: var(--gray-700); font-size: 0.95rem; font-weight: 500; transition: color .2s; }
-    .nav-links a:hover { color: var(--blue); }
-    .nav-cta {
-      background: var(--blue);
-      color: white !important;
-      padding: 0.4rem 1.1rem;
-      border-radius: 8px;
-      transition: background .2s !important;
-    }
-    .nav-cta:hover { background: var(--blue-dark) !important; color: white !important; }
 
-    /* HERO */
-    .hero {
-      background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #3b82f6 100%);
-      color: white;
-      padding: 5rem 2rem 4rem;
-      text-align: center;
+    /* Nav */
+    .nav {
+      position: sticky; top: 0; z-index: 10;
+      background: rgb(253 253 251 / 0.82);
+      -webkit-backdrop-filter: saturate(160%) blur(14px);
+      backdrop-filter: saturate(160%) blur(14px);
+      border-bottom: 1px solid var(--rule);
     }
-    .hero-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      background: rgba(255,255,255,0.15);
-      border: 1px solid rgba(255,255,255,0.3);
-      border-radius: 100px;
-      padding: 0.3rem 1rem;
-      font-size: 0.85rem;
-      font-weight: 500;
-      margin-bottom: 1.5rem;
-    }
-    .hero h1 { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 800; margin-bottom: 1rem; line-height: 1.2; }
-    .hero h1 span { color: #93c5fd; }
-    .hero p { font-size: 1.15rem; color: rgba(255,255,255,0.85); max-width: 600px; margin: 0 auto 2.5rem; }
-    .hero-buttons { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
-    .btn-primary {
-      background: white;
-      color: var(--blue-dark);
-      padding: 0.75rem 2rem;
-      border-radius: 10px;
-      text-decoration: none;
-      font-weight: 700;
-      font-size: 1rem;
-      transition: transform .2s, box-shadow .2s;
-    }
-    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.2); }
-    .btn-secondary {
-      background: rgba(255,255,255,0.15);
-      color: white;
-      padding: 0.75rem 2rem;
-      border-radius: 10px;
-      text-decoration: none;
-      font-weight: 600;
-      font-size: 1rem;
-      border: 1px solid rgba(255,255,255,0.4);
-      transition: background .2s;
-    }
-    .btn-secondary:hover { background: rgba(255,255,255,0.25); }
+    .nav .wrap { display: flex; align-items: center; gap: 20px; height: 60px; }
+    .logo { display: inline-flex; align-items: center; gap: 10px; font-weight: 800; font-size: 20px; color: var(--pen); text-decoration: none; letter-spacing: -0.01em; }
+    .logo svg { width: 30px; height: 30px; }
+    .nav-links { display: flex; gap: 22px; margin-inline-start: auto; font-size: 15px; font-weight: 500; }
+    .nav-links a { color: var(--ink-2); text-decoration: none; padding: 10px 0; }
+    .nav-links a:hover { color: var(--pen); }
+    .lang { font: inherit; font-size: 14px; font-weight: 600; color: var(--pen); background: none; border: 1.5px solid var(--rule); border-radius: 999px; padding: 6px 14px; cursor: pointer; min-height: 36px; }
+    .lang:hover { border-color: var(--pen); }
+    @media (max-width: 700px) { .nav-links { display: none; } .lang { margin-inline-start: auto; } }
 
-    /* CHAT MOCKUP */
-    .mockup-section {
-      padding: 4rem 2rem;
-      background: var(--gray-100);
+    /* Buttons */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      min-height: 48px; padding: 12px 24px; border-radius: 12px;
+      font: inherit; font-size: 17px; font-weight: 600; text-decoration: none; cursor: pointer;
+      transition: transform 160ms var(--ease-out), background-color 200ms ease, box-shadow 200ms ease;
     }
-    .mockup-wrap {
-      max-width: 700px;
-      margin: 0 auto;
-      background: white;
-      border-radius: 20px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.12);
+    .btn:active { transform: scale(0.97); }
+    .btn-pen { background: var(--pen); color: #fff; box-shadow: 0 2px 0 var(--pen-deep), 0 10px 24px -10px rgb(29 63 168 / 0.6); }
+    .btn-pen:hover { background: var(--pen-deep); }
+    .btn-line { color: var(--pen); background: var(--sheet); box-shadow: inset 0 0 0 1.5px var(--pen); }
+    .btn-line:hover { background: #f1f5ff; }
+    .btn svg { width: 18px; height: 18px; }
+    html[dir="rtl"] .btn .arrow { transform: scaleX(-1); }
+
+    /* Highlighter: the one gesture every student makes on a formula sheet. */
+    .hl {
+      background-image: linear-gradient(transparent 52%, var(--highlight) 52%, var(--highlight) 92%, transparent 92%);
+      background-repeat: no-repeat;
+      background-size: 100% 100%;
+      padding-inline: 0.08em;
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      .hero .hl { background-size: 0% 100%; animation: mark 900ms 350ms var(--ease-out) forwards; }
+      html[dir="rtl"] .hero .hl { background-position: right; }
+    }
+    @keyframes mark { to { background-size: 100% 100%; } }
+
+    /* Hero */
+    .hero { padding: clamp(40px, 7vw, 88px) 0 clamp(48px, 7vw, 96px); }
+    .hero .wrap { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: clamp(32px, 5vw, 64px); align-items: center; }
+    .hero h1 { font-size: clamp(40px, 6.2vw, 72px); line-height: 1.04; font-weight: 800; letter-spacing: -0.025em; color: var(--ink); text-wrap: balance; }
+    .hero h1 .pen { color: var(--pen); }
+    .hero-lead { margin-top: 20px; font-size: clamp(18px, 2vw, 21px); line-height: 1.55; color: var(--ink-2); max-width: 32em; text-wrap: pretty; }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+    .hero-note { margin-top: 14px; font-size: 14px; color: var(--ink-2); }
+    @media (max-width: 900px) { .hero .wrap { grid-template-columns: 1fr; } }
+
+    /* The worked example: a sheet torn from the notebook */
+    .sheet {
+      background: var(--sheet);
+      border-radius: 18px;
+      box-shadow: 0 1px 2px rgb(20 30 60 / 0.06), 0 30px 60px -24px rgb(20 30 60 / 0.35);
       overflow: hidden;
-      border: 1px solid var(--gray-200);
+      border: 1px solid var(--rule);
     }
-    .mockup-header {
-      background: var(--blue);
-      padding: 1rem 1.5rem;
-      color: white;
-      text-align: center;
-    }
-    .mockup-header h3 { font-size: 1.1rem; font-weight: 700; }
-    .mockup-header p { font-size: 0.8rem; opacity: 0.8; }
-    .unit-bar {
-      display: flex;
-      gap: 0.5rem;
-      padding: 0.8rem 1.5rem;
-      border-bottom: 1px solid var(--gray-100);
-      background: var(--gray-50);
-      align-items: center;
-      direction: rtl;
-    }
-    .unit-label { font-size: 0.8rem; color: var(--gray-500); }
-    .unit-btn {
-      padding: 0.25rem 0.75rem;
-      border-radius: 100px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      border: 1px solid var(--gray-200);
-      background: white;
-      color: var(--gray-700);
-      cursor: default;
-    }
-    .unit-btn.active {
-      background: var(--blue);
-      color: white;
-      border-color: var(--blue);
-    }
-    .chat-body { padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; direction: rtl; }
-    .msg { display: flex; }
-    .msg.user { justify-content: flex-start; }
-    .msg.bot { justify-content: flex-end; }
-    .bubble {
-      max-width: 80%;
-      padding: 0.75rem 1rem;
-      border-radius: 16px;
-      font-size: 0.9rem;
-      line-height: 1.5;
-    }
-    .msg.user .bubble {
-      background: var(--blue);
-      color: white;
-      border-bottom-right-radius: 4px;
-    }
-    .msg.bot .bubble {
-      background: var(--gray-100);
-      color: var(--gray-900);
-      border-bottom-left-radius: 4px;
-      border: 1px solid var(--gray-200);
-    }
-    .formula {
-      background: white;
-      border: 1px solid var(--gray-200);
-      border-radius: 8px;
-      padding: 0.5rem 0.75rem;
-      margin: 0.4rem 0;
-      font-family: 'Courier New', monospace;
-      font-size: 1rem;
-      text-align: center;
-      color: var(--blue-dark);
-    }
-    .chat-input-bar {
-      padding: 1rem 1.5rem;
-      border-top: 1px solid var(--gray-200);
-      display: flex;
-      gap: 0.5rem;
-      direction: rtl;
-    }
-    .fake-input {
-      flex: 1;
-      border: 1px solid var(--gray-200);
-      border-radius: 12px;
-      padding: 0.6rem 1rem;
-      font-size: 0.9rem;
-      color: var(--gray-500);
-      background: var(--gray-50);
-    }
-    .fake-send {
-      background: var(--blue);
-      color: white;
-      border: none;
-      border-radius: 10px;
-      padding: 0.6rem 1.1rem;
-      font-size: 0.9rem;
-      font-weight: 600;
-      cursor: default;
-    }
+    .sheet-head { display: flex; align-items: center; gap: 10px; padding: 14px 18px; border-bottom: 1px solid var(--rule); }
+    .sheet-head strong { font-size: 15px; color: var(--pen); }
+    .sheet-head .units { margin-inline-start: auto; display: flex; gap: 6px; }
+    .units span { font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px; color: var(--ink-2); box-shadow: inset 0 0 0 1px var(--rule); }
+    .units span.on { background: var(--pen); color: #fff; box-shadow: none; }
+    .example-label { font-size: 12px; color: var(--ink-2); padding: 10px 18px 0; }
+    .chat { padding: 12px 18px 20px; display: grid; gap: 12px; }
+    .msg { max-width: 88%; padding: 12px 14px; border-radius: 16px; font-size: 15px; line-height: 1.55; }
+    .msg.me { justify-self: start; background: var(--pen); color: #fff; border-end-start-radius: 4px; }
+    .msg.tutor { justify-self: end; background: #f5f7fc; border: 1px solid var(--rule); border-end-end-radius: 4px; }
+    .msg .math { display: block; direction: ltr; text-align: center; margin: 8px 0; padding: 8px; background: #fff; border-radius: 10px; border: 1px dashed var(--grid-strong); font-size: 1.08em; overflow-x: auto; }
+    .msg .tick { color: #1f8a3b; font-weight: 700; }
 
-    /* FEATURES */
-    .features { padding: 5rem 2rem; text-align: center; }
-    .section-tag {
-      display: inline-block;
-      background: #dbeafe;
-      color: var(--blue-dark);
-      padding: 0.3rem 0.9rem;
-      border-radius: 100px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      margin-bottom: 0.75rem;
-    }
-    .section-title { font-size: clamp(1.6rem, 3vw, 2.2rem); font-weight: 800; margin-bottom: 0.75rem; }
-    .section-sub { color: var(--gray-500); font-size: 1rem; max-width: 520px; margin: 0 auto 3rem; }
-    .features-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 1.5rem;
-      max-width: 1000px;
-      margin: 0 auto;
-    }
-    .feature-card {
-      background: white;
-      border: 1px solid var(--gray-200);
-      border-radius: 16px;
-      padding: 1.75rem;
-      text-align: right;
-      transition: box-shadow .2s, transform .2s;
-    }
-    .feature-card:hover { box-shadow: 0 8px 30px rgba(0,0,0,0.08); transform: translateY(-3px); }
-    .feature-icon {
-      width: 48px;
-      height: 48px;
-      background: #dbeafe;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.4rem;
-      margin-bottom: 1rem;
-      margin-right: auto;
-    }
-    .feature-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem; }
-    .feature-card p { font-size: 0.875rem; color: var(--gray-500); line-height: 1.5; }
+    /* Sections */
+    section { scroll-margin-top: 72px; }
+    .band { padding: clamp(64px, 9vw, 112px) 0; }
+    .band-sheet { background: rgb(255 255 255 / 0.86); border-block: 1px solid var(--rule); }
+    .title { font-size: clamp(30px, 4.4vw, 48px); line-height: 1.1; font-weight: 800; letter-spacing: -0.02em; max-width: 18em; text-wrap: balance; }
+    .lead { margin-top: 14px; font-size: 19px; color: var(--ink-2); max-width: 34em; }
 
-    /* STACK */
-    .stack { background: var(--gray-900); color: white; padding: 4rem 2rem; text-align: center; }
-    .stack .section-title { color: white; }
-    .stack .section-sub { color: #94a3b8; }
-    .stack-pills {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.75rem;
-      justify-content: center;
-      max-width: 700px;
-      margin: 0 auto;
-    }
-    .pill {
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.15);
-      color: white;
-      padding: 0.4rem 1rem;
-      border-radius: 100px;
-      font-size: 0.875rem;
-      font-weight: 500;
-    }
+    .features { margin-top: clamp(32px, 5vw, 56px); display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 56px; }
+    .feature { padding: 22px 0; border-top: 1.5px solid var(--rule); display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 4px 16px; }
+    .feature svg { width: 30px; height: 30px; color: var(--pen); grid-row: span 2; margin-top: 2px; }
+    .feature h3 { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; }
+    .feature p { font-size: 16px; color: var(--ink-2); }
+    @media (max-width: 760px) { .features { grid-template-columns: 1fr; } }
 
-    /* HOW */
-    .how { padding: 5rem 2rem; text-align: center; }
-    .steps { display: flex; gap: 2rem; justify-content: center; flex-wrap: wrap; max-width: 900px; margin: 0 auto; }
-    .step { flex: 1; min-width: 200px; max-width: 260px; }
-    .step-num {
-      width: 48px;
-      height: 48px;
-      background: var(--blue);
-      color: white;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.2rem;
-      font-weight: 800;
-      margin: 0 auto 1rem;
-    }
-    .step h3 { font-weight: 700; margin-bottom: 0.3rem; }
-    .step p { font-size: 0.875rem; color: var(--gray-500); }
+    .steps { margin-top: 40px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; counter-reset: step; }
+    .steps li { counter-increment: step; padding-top: 18px; border-top: 3px solid var(--pen); }
+    .steps li::before { content: counter(step); display: block; font-size: 44px; font-weight: 800; color: var(--pen); line-height: 1; margin-bottom: 10px; }
+    .steps h3 { font-size: 20px; font-weight: 700; }
+    .steps p { margin-top: 4px; color: var(--ink-2); }
+    @media (max-width: 760px) { .steps { grid-template-columns: 1fr; } }
 
-    /* CTA */
-    .cta {
-      background: linear-gradient(135deg, #1e3a8a, #2563eb);
-      color: white;
-      padding: 5rem 2rem;
-      text-align: center;
-    }
-    .cta h2 { font-size: clamp(1.6rem, 3vw, 2.4rem); font-weight: 800; margin-bottom: 1rem; }
-    .cta p { color: rgba(255,255,255,0.8); margin-bottom: 2rem; font-size: 1rem; }
+    .tech { margin-top: 40px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; }
+    .tech div { padding-top: 14px; border-top: 1.5px solid var(--rule); }
+    .tech strong { direction: ltr; unicode-bidi: isolate; text-align: start; display: block; font-size: clamp(28px, 3.4vw, 40px); font-weight: 800; color: var(--pen); letter-spacing: -0.02em; line-height: 1.1; }
+    html[dir="rtl"] .tech strong { text-align: right; }
+    .tech span { display: block; margin-top: 6px; font-size: 15px; color: var(--ink-2); }
+    .stack { margin-top: 28px; font-size: 15px; color: var(--ink-2); direction: ltr; text-align: start; }
+    html[dir="rtl"] .stack { text-align: right; }
+    @media (max-width: 860px) { .tech { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
-    /* FOOTER */
-    footer {
-      background: var(--gray-900);
-      color: #94a3b8;
-      text-align: center;
-      padding: 2rem;
-      font-size: 0.875rem;
+    .close { text-align: center; }
+    .close .title { margin: 0 auto; }
+    .close .lead { margin: 14px auto 0; }
+    .close .hero-actions { justify-content: center; }
+
+    footer { padding: 28px 0 36px; font-size: 14px; color: var(--ink-2); border-top: 1px solid var(--rule); background: rgb(255 255 255 / 0.86); }
+    footer .wrap { display: flex; flex-wrap: wrap; gap: 8px 20px; }
+    footer a { color: var(--pen); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    /* Entrances: visible by default, only animated once the script opts in. */
+    .js .reveal { opacity: 0; transform: translateY(18px); transition: opacity 600ms var(--ease-out), transform 800ms var(--ease-out); }
+    .js .reveal.in { opacity: 1; transform: none; }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .js .reveal { transform: none; transition: opacity 250ms ease; }
+      .btn:active { transform: none; }
     }
-    footer a { color: #60a5fa; text-decoration: none; }
   </style>
 </head>
 <body>
+<div class="page">
 
-<!-- NAV -->
-<nav>
-  <div class="nav-logo">EasyMat ✦</div>
-  <div class="nav-links">
-    <a href="#features">פיצ'רים</a>
-    <a href="#how">איך זה עובד</a>
-    <a href="https://github.com/SaharHalili95/easymat" target="_blank" rel="noopener" class="nav-cta">GitHub</a>
+<header class="nav">
+  <div class="wrap">
+    <a class="logo" href="#top" aria-label="EasyMat">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#1d3fa8"/><path d="M21.5 9.5h-10l6 6.5-6 6.5h10" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      EasyMat
+    </a>
+    <nav class="nav-links" aria-label="Main">
+      <a href="#how"><span lang="he">איך זה עובד</span><span lang="en">How it works</span></a>
+      <a href="#features"><span lang="he">מה יש בפנים</span><span lang="en">What's inside</span></a>
+      <a href="#tech"><span lang="he">מתחת למכסה</span><span lang="en">Under the hood</span></a>
+    </nav>
+    <button class="lang" type="button" id="lang" aria-label="Switch to English">English</button>
   </div>
-</nav>
+</header>
 
-<!-- HERO -->
-<section class="hero">
-  <div class="hero-badge">🤖 מופעל על ידי Claude AI + RAG</div>
-  <h1>מורה מתמטיקה AI<br /><span>לבגרות הישראלית</span></h1>
-  <p>שאל שאלה, קבל פתרון מלא עם נוסחאות — מותאם ל-3, 4 ו-5 יחידות. עברית ואנגלית.</p>
-  <div class="hero-buttons">
-    <a href="https://github.com/SaharHalili95/easymat" target="_blank" rel="noopener" class="btn-primary">צפה בקוד</a>
-    <a href="#features" class="btn-secondary">גלה עוד</a>
-  </div>
-</section>
-
-<!-- CHAT MOCKUP -->
-<section class="mockup-section">
-  <div class="mockup-wrap">
-    <div class="mockup-header">
-      <h3>EasyMat AI</h3>
-      <p>מורה מתמטיקה לבגרות | 3, 4, 5 יחידות</p>
-    </div>
-    <div class="unit-bar">
-      <span class="unit-label">רמת יחידות:</span>
-      <span class="unit-btn">3 יחידות</span>
-      <span class="unit-btn active">4 יחידות</span>
-      <span class="unit-btn">5 יחידות</span>
-    </div>
-    <div class="chat-body">
-      <div class="msg user">
-        <div class="bubble">מה הנגזרת של x³ + 2x?</div>
-      </div>
-      <div class="msg bot">
-        <div class="bubble">
-          נגזור כל איבר בנפרד לפי כלל הנגזרת:<br /><br />
-          כלל: הנגזרת של xⁿ היא n·xⁿ⁻¹
-          <div class="formula">f(x) = x³ + 2x</div>
-          <div class="formula">f′(x) = 3x² + 2</div>
-          האיבר הראשון x³ נגזר ל-3x², והאיבר 2x נגזר ל-2. ✓
+<main id="top">
+  <section class="hero">
+    <div class="wrap">
+      <div>
+        <h1>
+          <span lang="he">מתמטיקה לבגרות, <span class="pen">מוסברת <span class="hl">צעד אחר צעד</span>.</span></span>
+          <span lang="en">Bagrut maths, <span class="pen">explained <span class="hl">step by step</span>.</span></span>
+        </h1>
+        <p class="hero-lead">
+          <span lang="he">שואלים בעברית או באנגלית ומקבלים פתרון מלא עם נוסחאות, מותאם ל-3, 4 או 5 יחידות. אפשר גם פשוט לצלם את השאלה מהמחברת, או לתרגל על שאלות בגרות אמיתיות.</span>
+          <span lang="en">Ask in Hebrew or English and get a full worked solution with formulas, tuned to 3, 4 or 5 units. Or just snap a photo of the question in your notebook, or practise on real Bagrut questions.</span>
+        </p>
+        <div class="hero-actions">
+          <a class="btn btn-pen" href="#how">
+            <span lang="he">לראות איך זה עובד</span><span lang="en">See how it works</span>
+            <svg class="arrow" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h12m-5-5 5 5-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+          <a class="btn btn-line" href="https://github.com/SaharHalili95/easymat" target="_blank" rel="noopener">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+            <span lang="he">לקוד ב-GitHub</span><span lang="en">Code on GitHub</span>
+          </a>
         </div>
+        <p class="hero-note">
+          <span lang="he">קוד פתוח. מריצים מקומית עם מפתחות API משלכם.</span>
+          <span lang="en">Open source. Runs locally with your own API keys.</span>
+        </p>
       </div>
-      <div class="msg user">
-        <div class="bubble">תסביר לי מתי הנגזרת שווה אפס</div>
-      </div>
-      <div class="msg bot">
-        <div class="bubble">
-          נגזרת שווה אפס כשהפונקציה במקסימום, מינימום, או נקודת פיתול אופקית — כלומר ב"נקודות קריטיות".<br /><br />
-          עבור f′(x) = 3x² + 2:
-          <div class="formula">3x² + 2 = 0 ⟹ x² = -2/3</div>
-          אין פתרון ממשי, כלומר לפונקציה זו אין נקודות קריטיות.
+
+      <figure class="sheet reveal" aria-labelledby="example-label">
+        <div class="sheet-head">
+          <strong>EasyMat</strong>
+          <div class="units" aria-hidden="true"><span>3</span><span class="on">4</span><span>5</span></div>
         </div>
+        <p class="example-label" id="example-label">
+          <span lang="he">שיחה לדוגמה · 4 יחידות</span><span lang="en">Example conversation · 4 units</span>
+        </p>
+        <div class="chat">
+          <p class="msg me"><span lang="he">מה הנגזרת של</span><span lang="en">What's the derivative of</span> <span dir="ltr" data-tex="x^3 + 2x">x³ + 2x</span>?</p>
+          <div class="msg tutor">
+            <p><span lang="he">גוזרים כל איבר בנפרד לפי הכלל</span><span lang="en">Differentiate each term with the rule</span> <span dir="ltr" data-tex="(x^n)' = n\,x^{n-1}">(xⁿ)′ = n·xⁿ⁻¹</span>:</p>
+            <span class="math" data-tex-display="f'(x) = 3x^2 + 2">f′(x) = 3x² + 2</span>
+            <p><span class="tick">✓</span> <span lang="he">האיבר <span dir="ltr" data-tex="x^3">x³</span> נגזר ל-<span dir="ltr" data-tex="3x^2">3x²</span>, והאיבר <span dir="ltr" data-tex="2x">2x</span> נגזר ל-2.</span><span lang="en"><span data-tex="x^3">x³</span> becomes <span data-tex="3x^2">3x²</span>, and <span data-tex="2x">2x</span> becomes 2.</span></p>
+          </div>
+          <p class="msg me"><span lang="he">מתי הנגזרת שווה אפס?</span><span lang="en">When is the derivative zero?</span></p>
+          <div class="msg tutor">
+            <span class="math" data-tex-display="3x^2 + 2 = 0 \;\Rightarrow\; x^2 = -\tfrac{2}{3}">3x² + 2 = 0 ⇒ x² = −2/3</span>
+            <p><span lang="he">אין פתרון ממשי, ולכן לפונקציה אין נקודות קיצון.</span><span lang="en">There is no real solution, so the function has no extreme points.</span></p>
+          </div>
+        </div>
+      </figure>
+    </div>
+  </section>
+
+  <section class="band band-sheet" id="how" aria-labelledby="how-title">
+    <div class="wrap">
+      <h2 class="title reveal" id="how-title"><span lang="he">מהשאלה לפתרון, בשלושה צעדים.</span><span lang="en">From question to solution in three steps.</span></h2>
+      <ol class="steps">
+        <li class="reveal">
+          <h3><span lang="he">בוחרים רמה</span><span lang="en">Pick your level</span></h3>
+          <p><span lang="he">3, 4 או 5 יחידות. הטון, החומר ורמת הפירוט מותאמים לרמה.</span><span lang="en">3, 4 or 5 units. Tone, material and detail follow your level.</span></p>
+        </li>
+        <li class="reveal">
+          <h3><span lang="he">שואלים או מצלמים</span><span lang="en">Ask, or snap a photo</span></h3>
+          <p><span lang="he">כותבים שאלה, או מעלים תמונה של שאלה בכתב יד, והיא מתומללת לנוסחאות.</span><span lang="en">Type a question, or upload a photo of a handwritten one and it is transcribed to formulas.</span></p>
+        </li>
+        <li class="reveal">
+          <h3><span lang="he">מקבלים פתרון מלא</span><span lang="en">Get the full solution</span></h3>
+          <p><span lang="he">התשובה מבוססת על חומר הבגרות, מגיעה תוך כדי כתיבה, עם נוסחאות כמו בספר.</span><span lang="en">The answer is grounded in Bagrut material, streams in as it is written, with textbook formulas.</span></p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="band" id="features" aria-labelledby="features-title">
+    <div class="wrap">
+      <h2 class="title reveal" id="features-title"><span lang="he">כל מה שצריך לבגרות, במקום אחד.</span><span lang="en">Everything the Bagrut needs, in one place.</span></h2>
+      <p class="lead reveal"><span lang="he">מורה שמכיר את החומר, עונה בשפה שלכם ומסביר כל צעד.</span><span lang="en">A tutor that knows the material, answers in your language and explains every step.</span></p>
+      <ul class="features">
+        <li class="feature reveal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5V5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2Z"/><path d="M8 7h7M8 11h5"/></svg>
+          <h3><span lang="he">תרגול על שאלות בגרות אמיתיות</span><span lang="en">Practise on real Bagrut questions</span></h3>
+          <p><span lang="he">שאלה מבחינות 2025-2026 לפי רמה ופרק, עם התשובה הרשמית כשמבקשים.</span><span lang="en">A question from the 2025-2026 exams by level and chapter, with the official answer on request.</span></p>
+        </li>
+        <li class="feature reveal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8a2 2 0 0 1 2-2h2l1.5-2h7L17 6h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><circle cx="12" cy="13" r="3.5"/></svg>
+          <h3><span lang="he">צילום שאלה בכתב יד</span><span lang="en">Snap a handwritten question</span></h3>
+          <p><span lang="he">מצלמים את המחברת, והשאלה מתומללת לנוסחאות ונפתרת.</span><span lang="en">Photograph your notebook; the question is transcribed to formulas and solved.</span></p>
+        </li>
+        <li class="feature reveal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <h3><span lang="he">מבוסס על חומר הבגרות</span><span lang="en">Grounded in Bagrut material</span></h3>
+          <p><span lang="he">לפני כל תשובה המערכת מחפשת בנוסחאות, בדוגמאות ובשאלות פתורות, ולא מנחשת.</span><span lang="en">Before every answer it searches formulas, worked examples and solved questions instead of guessing.</span></p>
+        </li>
+        <li class="feature reveal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 5h14M5 12h9M5 19h14"/><path d="M17 9l3 3-3 3"/></svg>
+          <h3><span lang="he">נוסחאות כמו בספר</span><span lang="en">Formulas like in the textbook</span></h3>
+          <p><span lang="he">כל נוסחה מוצגת בכתב מתמטי אמיתי, לא כטקסט.</span><span lang="en">Every formula is set in real mathematical type, not plain text.</span></p>
+        </li>
+        <li class="feature reveal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h8M8 4v2c0 4-2 7-4 8M6 10c1.5 2 3.5 3.5 6 4"/><path d="m13 20 4-9 4 9M14.5 17h5"/></svg>
+          <h3><span lang="he">עברית ואנגלית</span><span lang="en">Hebrew and English</span></h3>
+          <p><span lang="he">כותבים בעברית ומקבלים תשובה בעברית, עם כיוון כתיבה מימין לשמאל.</span><span lang="en">Write in Hebrew and the answer comes in Hebrew, right to left; the same for English.</span></p>
+        </li>
+        <li class="feature reveal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 3 5 13h6l-1 8 8-10h-6Z"/></svg>
+          <h3><span lang="he">תשובה מיידית</span><span lang="en">Answers right away</span></h3>
+          <p><span lang="he">התשובה מופיעה מילה אחר מילה, והמילה הראשונה מגיעה בדרך כלל תוך פחות משתי שניות.</span><span lang="en">The answer streams word by word; the first word usually arrives in under two seconds.</span></p>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="band band-sheet" id="tech" aria-labelledby="tech-title">
+    <div class="wrap">
+      <h2 class="title reveal" id="tech-title"><span lang="he">מתחת למכסה.</span><span lang="en">Under the hood.</span></h2>
+      <p class="lead reveal"><span lang="he">למי שרוצה לדעת איך זה בנוי.</span><span lang="en">For anyone who wants to know how it is built.</span></p>
+      <div class="tech">
+        <div class="reveal"><strong>~90%</strong><span><span lang="he">פחות עלות מודל, בזכות prompt caching</span><span lang="en">lower model cost, thanks to prompt caching</span></span></div>
+        <div class="reveal"><strong>103</strong><span><span lang="he">בדיקות Vitest, כולל נתיב הצ'אט</span><span lang="en">Vitest tests, including the chat route</span></span></div>
+        <div class="reveal"><strong>2</strong><span><span lang="he">מודלים: מהיר לשאלות רגילות, חזק להוכחות, וקטורים ותמונות</span><span lang="en">models: a fast one for everyday questions, a strong one for proofs, vectors and photos</span></span></div>
+        <div class="reveal"><strong>RAG</strong><span><span lang="he">על בסיס ידע ב-Obsidian ב-Pinecone, עם סנכרון של מה שהשתנה בלבד</span><span lang="en">over an Obsidian knowledge base in Pinecone, syncing only what changed</span></span></div>
+      </div>
+      <p class="stack reveal">Next.js 16 · TypeScript · Claude API · Pinecone · Obsidian · KaTeX · Tailwind CSS · Vitest</p>
+    </div>
+  </section>
+
+  <section class="band close" aria-labelledby="close-title">
+    <div class="wrap">
+      <h2 class="title reveal" id="close-title"><span lang="he">רוצים לראות את הקוד?</span><span lang="en">Want to see the code?</span></h2>
+      <p class="lead reveal"><span lang="he">הכל פתוח: ה-RAG, הסטרימינג, מצב התרגול והבדיקות.</span><span lang="en">It is all open: the RAG pipeline, streaming, practice mode and the tests.</span></p>
+      <div class="hero-actions reveal">
+        <a class="btn btn-pen" href="https://github.com/SaharHalili95/easymat" target="_blank" rel="noopener"><span lang="he">לקוד ב-GitHub</span><span lang="en">Code on GitHub</span></a>
+        <a class="btn btn-line" href="https://saharhalili95.github.io/html-portfolio/" target="_blank" rel="noopener"><span lang="he">על המפתח</span><span lang="en">About the developer</span></a>
       </div>
     </div>
-    <div class="chat-input-bar">
-      <span class="fake-input">שאל שאלת מתמטיקה... / Ask a math question...</span>
-      <button class="fake-send">שלח</button>
-    </div>
-  </div>
-</section>
+  </section>
+</main>
 
-<!-- FEATURES -->
-<section class="features" id="features">
-  <div class="section-tag">פיצ'רים</div>
-  <h2 class="section-title">כל מה שצריך לבגרות</h2>
-  <p class="section-sub">מורה שמכיר את החומר, עונה בעברית, ומסביר צעד אחר צעד.</p>
-  <div class="features-grid">
-    <div class="feature-card">
-      <div class="feature-icon">🔍</div>
-      <h3>RAG על חומר הלימוד</h3>
-      <p>מחפש בחומר הבגרות האמיתי לפני כל תשובה — לא מנחש, מוצא.</p>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon">📐</div>
-      <h3>נוסחאות LaTeX</h3>
-      <p>כל נוסחה מתרנדרת כמו בספר לימוד. לא טקסט רגיל — מתמטיקה אמיתית.</p>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon">📷</div>
-      <h3>העלאת תמונה</h3>
-      <p>צילמת שאלה בכתב יד? שלח ו-AI יתמלל, יפרש ויפתור.</p>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon">🎯</div>
-      <h3>3 / 4 / 5 יחידות</h3>
-      <p>בוחר את רמת הבגרות שלך — הסגנון, הטון והחומר מותאמים אוטומטית.</p>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon">🌐</div>
-      <h3>עברית ואנגלית</h3>
-      <p>כותב בעברית — עונה בעברית. כותב באנגלית — עונה באנגלית.</p>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon">⚡</div>
-      <h3>סטרימינג בזמן אמת</h3>
-      <p>התשובה מגיעה מילה מילה, בלי להמתין לכל הפלט.</p>
-    </div>
-  </div>
-</section>
-
-<!-- STACK -->
-<section class="stack">
-  <div class="section-tag" style="background:rgba(255,255,255,0.1);color:#93c5fd;">טכנולוגיה</div>
-  <h2 class="section-title">Stack</h2>
-  <p class="section-sub" style="color:#94a3b8;">בנוי על הכלים הטובים ביותר שיש.</p>
-  <div class="stack-pills">
-    <span class="pill">Next.js 14</span>
-    <span class="pill">TypeScript</span>
-    <span class="pill">Claude API</span>
-    <span class="pill">Pinecone</span>
-    <span class="pill">Voyage AI</span>
-    <span class="pill">KaTeX</span>
-    <span class="pill">Tailwind CSS</span>
-    <span class="pill">RAG Architecture</span>
-    <span class="pill">Streaming</span>
-    <span class="pill">Prompt Caching</span>
-  </div>
-</section>
-
-<!-- HOW IT WORKS -->
-<section class="how" id="how">
-  <div class="section-tag">איך זה עובד</div>
-  <h2 class="section-title">3 שלבים פשוטים</h2>
-  <p class="section-sub">מהשאלה שלך לתשובה מדויקת תוך שניות.</p>
-  <div class="steps">
-    <div class="step">
-      <div class="step-num">1</div>
-      <h3>בחר יחידות</h3>
-      <p>בחר 3, 4 או 5 יחידות ו-AI יתאים את עצמו לרמה שלך.</p>
-    </div>
-    <div class="step">
-      <div class="step-num">2</div>
-      <h3>שאל שאלה</h3>
-      <p>כתוב שאלה בטקסט, או העלה תמונה של שאלה בכתב יד.</p>
-    </div>
-    <div class="step">
-      <div class="step-num">3</div>
-      <h3>קבל פתרון</h3>
-      <p>Claude מחפש בחומר הלימוד ומסביר צעד אחר צעד עם נוסחאות.</p>
-    </div>
-  </div>
-</section>
-
-<!-- CTA -->
-<section class="cta">
-  <h2>מוכן לראות את הקוד?</h2>
-  <p>הפרויקט פתוח לגמרי — Next.js, Claude API, Pinecone, RAG מלא.</p>
-  <a href="https://github.com/SaharHalili95/easymat" target="_blank" rel="noopener" class="btn-primary">
-    GitHub Repository
-  </a>
-</section>
-
-<!-- FOOTER -->
 <footer>
-  <p>בנוי על ידי <a href="https://saharhalili95.github.io/html-portfolio/" target="_blank" rel="noopener">Sahar Halili</a> &nbsp;·&nbsp; <a href="https://github.com/SaharHalili95/easymat" target="_blank" rel="noopener">GitHub</a></p>
+  <div class="wrap">
+    <span><span lang="he">נבנה על ידי</span><span lang="en">Built by</span> <a href="https://saharhalili95.github.io/html-portfolio/" target="_blank" rel="noopener">Sahar Halili</a></span>
+    <a href="https://github.com/SaharHalili95/easymat" target="_blank" rel="noopener">GitHub</a>
+  </div>
 </footer>
 
+</div>
+
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.js"></script>
+<script>
+  (function () {
+    var KEY = 'easymat.lang';
+    var root = document.documentElement;
+    var button = document.getElementById('lang');
+
+    function apply(lang) {
+      root.lang = lang;
+      root.dir = lang === 'he' ? 'rtl' : 'ltr';
+      button.textContent = lang === 'he' ? 'English' : 'עברית';
+      button.setAttribute('aria-label', lang === 'he' ? 'Switch to English' : 'החלפה לעברית');
+      document.title = lang === 'he' ? 'EasyMat · מורה AI למתמטיקה לבגרות' : 'EasyMat · AI maths tutor for the Bagrut';
+    }
+
+    var saved = null;
+    try { saved = localStorage.getItem(KEY); } catch (e) { /* storage blocked */ }
+    apply(saved === 'en' ? 'en' : 'he');
+
+    button.addEventListener('click', function () {
+      var next = root.lang === 'he' ? 'en' : 'he';
+      apply(next);
+      try { localStorage.setItem(KEY, next); } catch (e) { /* not saved */ }
+    });
+
+    window.addEventListener('load', function () {
+      if (!window.katex) return;
+      document.querySelectorAll('[data-tex]').forEach(function (el) {
+        katex.render(el.getAttribute('data-tex'), el, { throwOnError: false });
+      });
+      document.querySelectorAll('[data-tex-display]').forEach(function (el) {
+        katex.render(el.getAttribute('data-tex-display'), el, { throwOnError: false, displayMode: true });
+      });
+    });
+
+    if ('IntersectionObserver' in window) {
+      root.classList.add('js');
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+        });
+      }, { rootMargin: '0px 0px -10% 0px', threshold: 0.08 });
+      document.querySelectorAll('.reveal').forEach(function (el) { io.observe(el); });
+    }
+  })();
+</script>
 </body>
 </html>
